@@ -1,5 +1,7 @@
 # CasaOS — Meta Global AI Developer Hackathon execution plan
 
+**Historical plan from November 2.** For current implementation and verified live results, see [README.md](README.md) and [reports/COMPARISON.md](reports/COMPARISON.md).
+
 Date: November 2, 2026. Deadline: November 4, 2026, 9pm ET. Indie Developer / Push the Frontier.
 
 ## Pitch

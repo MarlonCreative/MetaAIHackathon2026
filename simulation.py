@@ -142,6 +142,43 @@ def load_scenario(name):
     if name not in ('sunny', 'downpour', 'storm72'): raise ValueError('Unknown scenario')
     return json.loads((Path(__file__).parent/'scenarios'/f'{name}.json').read_text())
 
+CUSTOM_BOUNDS = {
+    'equipment': {
+        'solar_kwp': (0, 25), 'battery_kwh': (0, 100),
+        'inverter_kw': (0, 30), 'surge_kw': (0, 60),
+        'generator_kw': (0, 30), 'cistern_l': (100, 100000),
+        'pump_kw': (.1, 10), 'pump_surge_kw': (.1, 30),
+    },
+    'initial': {
+        'battery_kwh': (0, 100), 'fuel_l': (0, 500),
+        'cistern_l': (0, 100000), 'water_demand_lph': (0, 1000),
+        'water_inflow_lph': (0, 1000),
+    },
+}
+
+def configured_scenario(name, configuration=None):
+    """Apply a small, bounded set of virtual Home Stack assumptions."""
+    scenario = load_scenario(name)
+    if configuration is None: return scenario
+    if not isinstance(configuration, dict) or set(configuration) - set(CUSTOM_BOUNDS):
+        raise ValueError('Configuration must contain only equipment and initial')
+    for group, values in configuration.items():
+        if not isinstance(values, dict): raise ValueError(group + ' must be an object')
+        for key, value in values.items():
+            bounds = CUSTOM_BOUNDS[group].get(key)
+            if bounds is None: raise ValueError('Unknown configuration field: ' + key)
+            if type(value) not in (int, float) or not math.isfinite(value) or not bounds[0] <= value <= bounds[1]:
+                raise ValueError(f'{key} must be a finite number from {bounds[0]} to {bounds[1]}')
+        scenario[group].update(values) if group in scenario else scenario.update({group: dict(values)})
+    eq = Equipment(**scenario.get('equipment', {}))
+    initial = scenario.get('initial', {})
+    if initial.get('battery_kwh', 8) > eq.battery_kwh:
+        raise ValueError('Starting battery charge exceeds battery capacity')
+    if initial.get('cistern_l', 2700) > eq.cistern_l:
+        raise ValueError('Starting cistern water exceeds cistern capacity')
+    scenario['provenance'] = 'simulated; user-edited illustrative assumptions, not measured at Atami'
+    return scenario
+
 def run(scenario, controller=baseline):
     sim = Simulation(scenario)
     for _ in range(scenario['hours']): controller(sim); sim.step()

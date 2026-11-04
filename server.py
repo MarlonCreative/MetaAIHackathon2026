@@ -14,6 +14,10 @@ class Handler(BaseHTTPRequestHandler):
   route=urlparse(self.path).path
   if route.startswith('/api/lab/jobs/'): return self.reply(200,poll(route.rsplit('/',1)[-1]))
   if route=='/api/lab/status': return self.reply(200,{'meta_configured':bool(meta_key())})
+  if route=='/api/lab/saved/storm72-meta':
+   path=ROOT/'reports/storm72-meta.json'
+   if not path.exists():return self.reply(404,{'error':'Saved Meta report not found'})
+   b=path.read_bytes();self.send_response(200);self.send_header('Content-Type','application/json; charset=utf-8');self.send_header('Content-Length',str(len(b)));self.end_headers();return self.wfile.write(b)
   if route=='/lab-bridge.js':
    b=(ROOT/'lab-bridge.js').read_bytes();self.send_response(200);self.send_header('Content-Type','text/javascript');self.send_header('Content-Length',str(len(b)));self.end_headers();return self.wfile.write(b)
   if route=='/api/home-stack': return self.reply(200,{'stack':DEFAULT_STACK,'assumptions':DEFAULT_ASSUMPTIONS})
