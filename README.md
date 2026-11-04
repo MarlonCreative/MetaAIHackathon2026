@@ -1,6 +1,6 @@
 # CasaOS
 
-CasaOS is a local-first resilience planning simulator for a two-house property. It models a grid outage cascading to an electric cistern pump and internet equipment. DELSUR electricity, ATAMI Residential water through a cistern and electric pump, and Cabal internet are the **currently installed** services in the reference Home Stack. Solar, battery/inverter, generator, well, and backup connectivity are **proposed or simulated**, not installed. All equipment capacities, loads, weather, and outcomes are illustrative simulations, not home measurements.
+CasaOS is a local-first resilience planning simulator for homes that are located in rural places or places with unreliable energy and water resources. It models a grid outage cascading to an electric cistern pump and internet equipment. DELSUR electricity, ATAMI Residential water through a cistern and electric pump, and Cabal internet are the **currently installed** services in the reference Home Stack. Solar, battery/inverter, generator, well, and backup connectivity are **proposed or simulated**, not installed. All equipment capacities, loads, weather, and outcomes are illustrative simulations, not home measurements.
 
 [Product requirements](docs/PRD.md) · [Demo walkthrough](docs/DEMO.md) · [Submission checklist](docs/SUBMISSION.md) · [Decisions](docs/DECISIONS.md)
 
