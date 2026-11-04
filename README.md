@@ -71,7 +71,8 @@ The [recorded live Meta run](reports/storm72-meta.json) completed all 72 hours w
 | State | Work |
 |---|---|
 | Completed | Offline scenarios and fixed-rule baseline; safety gate; simulated outcome metrics and decision trace; complete live Meta tool loop and equal-input A/B report; 31 passing automated tests; v1 PRD imported to `docs/PRD.md`. |
-| In Progress | Public GitHub synchronization; demo video and submission evidence. |
+| Completed | Public GitHub source, recorded Meta evidence, and homeowner demo assets synchronized. |
+| In Progress | Demo video and platform submission evidence. |
 | Blocked | Final submission until video and platform confirmation exist. |
 | Not Started | Local open-weight inference and real-hardware adapters; both remain outside this MVP. |
 
