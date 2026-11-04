@@ -24,9 +24,12 @@ def compare_scenario(name, live=False):
     return result
 
 if __name__=='__main__':
-    parser=argparse.ArgumentParser(); parser.add_argument('--meta',action='store_true'); args=parser.parse_args()
+    parser=argparse.ArgumentParser(); parser.add_argument('--meta',action='store_true')
+    parser.add_argument('--scenario',choices=('sunny','downpour','storm72'))
+    args=parser.parse_args()
+    if args.meta and not args.scenario: parser.error('--meta requires one --scenario to bound credit use')
     Path('reports').mkdir(exist_ok=True)
-    for name in ('sunny','downpour','storm72'):
+    for name in ((args.scenario,) if args.scenario else ('sunny','downpour','storm72')):
         result=compare_scenario(name,args.meta)
         Path(f'reports/{name}.json').write_text(json.dumps(result,indent=2)+'\n')
         print(name, result['status'], json.dumps(result['baseline']['metrics']))

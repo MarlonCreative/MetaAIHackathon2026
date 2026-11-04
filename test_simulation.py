@@ -1,7 +1,8 @@
-import unittest, json
+import unittest, json, io
 from copy import deepcopy
+from unittest.mock import patch
 from simulation import Simulation, load_scenario, baseline, run
-from agent import MetaAgent
+from agent import MetaAgent, MetaTransport
 from benchmark import compare_scenario
 
 class SimulationTests(unittest.TestCase):
@@ -65,6 +66,27 @@ class FakeTransport:
         return {'role':'assistant','content':None,'tool_calls':calls}
 
 class AgentTests(unittest.TestCase):
+    def test_responses_contract_and_bounded_replay(self):
+        captured=[]
+        responses=[
+            {'status':'completed','id':'resp_1','usage':{'total_tokens':10},'output':[
+                {'type':'reasoning','summary':[],'encrypted_content':'opaque-test-data'},
+                {'type':'function_call','call_id':'call_1','name':'read_sensors','arguments':'{}'}]},
+            {'status':'completed','id':'resp_2','usage':{'total_tokens':12},'output':[
+                {'type':'message','role':'assistant','content':[{'type':'output_text','text':'Done'}]}]}]
+        def fake_open(request, **_):
+            captured.append(json.loads(request.data));return io.BytesIO(json.dumps(responses.pop(0)).encode())
+        with patch('agent.meta_key',return_value='fake-test-token'),patch('agent.settings',return_value={}),patch('agent.urllib.request.urlopen',side_effect=fake_open):
+            transport=MetaTransport();transport.start_tick()
+            messages=[{'role':'system','content':'Simulation only'},{'role':'user','content':'{}'}]
+            first=transport(messages)
+            messages.extend([first,{'role':'tool','tool_call_id':'call_1','content':'{}'}])
+            transport(messages)
+        self.assertEqual(len(captured),2)
+        self.assertEqual(captured[0]['store'],False)
+        self.assertEqual(captured[0]['max_output_tokens'],512)
+        self.assertEqual([item['type'] for item in captured[1]['input'][-3:]],['reasoning','function_call','function_call_output'])
+        self.assertNotIn('opaque-test-data',json.dumps(first))
     def test_tools_feedback_and_unexpected_failure(self):
         fake=FakeTransport();agent=MetaAgent(fake);s=Simulation(load_scenario('storm72'))
         agent(s);self.assertTrue(s.state['generator']);s.step()

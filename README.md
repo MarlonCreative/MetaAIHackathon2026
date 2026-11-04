@@ -1,68 +1,57 @@
-# CasaOS — autonomous resilience simulation
+# CasaOS
 
-Two houses in Atami, El Salvador. Confirmed installed services: DELSUR electricity, ATAMI Residential water via cistern and electric pump, and Cabal internet. Solar, battery and generator in this simulation are **virtual proposed upgrades**. Every capacity, weather profile and consumption figure is illustrative, not a measurement of the property.
+CasaOS is a local-first resilience planning simulator for a two-house property. It models a grid outage cascading to an electric cistern pump and internet equipment. DELSUR electricity, ATAMI Residential water through a cistern and electric pump, and Cabal internet are the **currently installed** services in the reference Home Stack. Solar, battery/inverter, generator, well, and backup connectivity are **proposed or simulated**, not installed. All equipment capacities, loads, weather, and outcomes are illustrative simulations, not home measurements.
 
-## Launch
+[Product requirements](docs/PRD.md) · [Demo walkthrough](docs/DEMO.md) · [Submission checklist](docs/SUBMISSION.md) · [Decisions](docs/DECISIONS.md)
 
-Python 3.9+; standard library only. From this folder:
+## Run locally
 
-```sh
-python3 server.py
-```
-
-Open http://127.0.0.1:8766/digital-twin.html and use **Measured resilience runs** at the top of the sidebar. Select a scenario and Rules baseline, run it, then scrub the hourly timeline. The existing dashboard remains at http://127.0.0.1:8766/ and its original evaluation and Home Stack features are preserved. The manual scene controls remain a separate legacy sandbox; measured results come exclusively from the Python backend. Moving a manual control after replay returns the scene to that sandbox; scrub again to restore backend replay.
-
-The Three.js scene downloads its original library from jsDelivr, so first load requires internet. Python scenarios, CLI benchmarks, baseline and tests run offline. No offline Meta model has been installed or demonstrated.
-
-## Genuine Meta agent
-
-Use a Meta Model API key in your terminal, never in browser code or a committed file:
-
-```sh
-export META_API_KEY='your-key'
-export META_MODEL='muse-spark-1.3'
-python3 server.py
-```
-
-`MODEL_API_KEY` is also accepted by the agent for compatibility; the legacy explanation dashboard uses `MODEL_API_KEY` only. The local `.env` file is read automatically when a Meta run starts and is ignored by Git. Set `META_API_KEY=` there and save to configure without a terminal; no server restart is needed after editing the key. Environment variables take precedence. No key is included in this project.
-
-Choose **Meta agent + baseline A/B** in the scene or run:
-
-```sh
-python3 benchmark.py --meta
-```
-
-This incurs real Meta API usage, potentially hundreds of inference requests across all three scenarios. The server supports one benchmark job at a time. Calls have a 30-second network timeout; each tick has at most eight model turns and sixteen tool calls. A 90-second tick budget is checked between requests; an in-flight request may overrun it by its timeout. Background jobs can take several minutes. Stop the server to cancel a running UI job.
-
-`agent.py` sends observations to Meta. Meta selects function tools, Python executes only allowlisted virtual tools, and matching `tool_call_id` results return to Meta for reassessment. Tools: `read_sensors`, `inspect_home_stack`, `forecast_resources`, `evaluate_action`, `request_control_action`, `inspect_outcome`. Controls change optional load, pump request, generator request and battery reserve. Essential refrigeration/router demand cannot be disabled. Changes persist across ticks. Every new tick supplies prior outcome, current state and newly observed events. Future fault schedules are not exposed to the model or forecasts.
-
-Actions pass a strict gate; pump dry-run requests and generator fault/empty-fuel starts are rejected. The electrical dispatcher additionally inhibits pump operation without startup surge and running energy. This distinction is logged as a permitted pump *request* followed by an outcome showing whether it actually ran. The model cannot edit measurements, add fuel, repair faults or actuate real equipment.
-
-If inference fails or exceeds its budget, that run permanently switches to the same baseline and is labeled `mixed_meta_rules_fallback`; it is not reported as a pure Meta result. A missing key prevents a live job from starting. An available API key is configuration, not evidence of successful model use. A successful no-tool model turn advances the simulation unchanged and is not counted as tool-use evidence.
-
-Protocol references: [Meta chat completions](https://dev.meta.ai/docs/cookbook/quickstart-chat-completions) and [Meta function calling](https://dev.meta.ai/docs/cookbook/tool-function-calling).
-
-## Reproduce and compare
+Python 3.9+ and the standard library are sufficient for the simulation and tests.
 
 ```sh
 python3 -m unittest discover -v
 python3 benchmark.py
+python3 server.py
 ```
 
-Three checked-in scenario files: `scenarios/sunny.json` (24 h), `scenarios/downpour.json` (24 h) and `scenarios/storm72.json` (72 h). All have seed 42; there is currently no stochastic sampling, so the event tape alone determines disturbances. The storm begins with a grid outage and low irradiance, loses the generator at hour 24, increases water demand at hour 32 and clears partially at hour 48. Failure is unknown to the controller until it occurs. Both controllers see identical observations; only the simulator reads future events.
+Open `http://127.0.0.1:8766/digital-twin.html` for the two-house scene and **Measured resilience runs**. Choose a scenario and **Rules baseline**, run it, then scrub the hourly timeline. `http://127.0.0.1:8766/` retains the earlier Home Stack explanation dashboard. The Three.js scene loads a library from jsDelivr, so its first browser load needs internet; Python simulation, baseline, and tests run offline.
 
-Each comparison constructs fresh identical state from the same scenario and writes matching SHA-256 input fingerprints. The rules baseline sheds optional demand during grid loss, keeps the pump requested when water is available, and uses 30%/80% battery generator hysteresis. It passes through the same action gate and dispatcher as the agent. No alternate scripted “AI” controller exists.
+`scenarios/sunny.json` and `scenarios/downpour.json` run 24 hours; `scenarios/storm72.json` runs 72 hours. The storm injects outage, cloud cover, a generator fault, and increased water demand. The baseline and agent start from identical scenario inputs. The fixed seed is recorded; current state transitions are deterministic and do not sample randomness. `python3 benchmark.py --scenario storm72` writes the reproducible baseline to `reports/storm72.json`.
 
-CLI writes metrics, hourly history, policy actions and (live runs) actual model messages/tool results to `reports/*.json`. Live generation can vary even at temperature zero: deterministic scenario replay is guaranteed, deterministic model decisions are not. Keep the audit with any published result. UI jobs are temporary in-memory records (last eight); use the CLI for durable reports.
+## Meta integration and credit limit
 
-Measured metrics: critical refrigeration uptime, network uptime (router power plus upstream availability), water demand fulfillment uptime, combined service uptime, delivered/unmet water, total unmet electrical demand (including deliberately shed comfort load), fuel used, rejected control requests and executed safety invariant violations. A rejected request is not an executed violation. Uptime counts only completely served hourly intervals. Pump runs for the fraction of an hour needed to deliver that hour's demand; there is no pressurized household storage or recovery of prior unmet water demand.
+Set `MODEL_API_KEY` only in the ignored local `.env` file. Start from `.env.example`; do not paste the key into chat, shell command arguments, screenshots, or committed files. `META_MODEL` defaults to `muse-spark-1.3`.
 
-## Current results and limitations
+```sh
+python3 -m casaos.meta_verify
+python3 benchmark.py --meta --scenario storm72
+```
 
-`reports/COMPARISON.md` records the actual baseline measurements and unavailable agent column. **No live Meta run has been performed: no API credential was configured. No AI improvement is claimed.** The fake transport in unit tests tests protocol plumbing and event response only; it is not a model and is never used by the UI or benchmarks.
+The first command makes **one** `POST /v1/responses` call, with a 20-second timeout, 128 output-token limit and `store: false`; it writes only response ID, status, token counts, and other safe metadata to `reports/meta_live_verification.json`. Run it intentionally because it consumes credits. The second command is a bounded agent run: **at most 16 requests total** for the selected scenario, each with a 20-second timeout, 512 output-token limit and `store: false`. When the cap or an inference error occurs, the remaining run uses the same fixed rules and is labeled `mixed_meta_rules_fallback`; it is not a pure Meta result. The UI's Meta option uses the same cap.
 
-Implemented: hourly solar/weather/grid/water/battery/fuel dynamics; three repeatable disturbances; baseline; tool-loop implementation with policy controls and explicit fallback; asynchronous local API; scene replay, A/B score and tick-specific action traces; automated tests. Original dashboard, Home Stack and manual scene functionality are retained.
+The agent exposes six virtual tools: sensor and Home Stack reads, resource forecast, action preview, policy-gated control request, and outcome inspection. Every requested control is schema and safety checked before it can affect simulation state. It cannot actuate physical equipment. The audit records simulated observations, requested actions, policy decisions, state changes, response IDs and token counts. Encrypted model reasoning stays in memory for tool-loop replay and is not saved. A mock transport in tests verifies protocol plumbing; it is not evidence of live Meta behavior.
 
-Mocked/assumed: provider availability, weather, all sensors, capacities, loads and equipment. Generator runs at bounded rated output when requested and burns `0.18 L/h + 0.24 L/kWh`; excess generation is curtailed. This conservative illustrative curve is not a verified generator datasheet. Grid charging is allowed; battery charge/discharge efficiency is 92% each way, charging/discharging capped at 3 kW; backup bus running capacity 4 kW and surge ceiling 5 kW. Pump surge is a conservative instantaneous source-capacity test. No transient AC, reactive power, transfer timing, battery degradation, pressure model, well, water treatment or weather API exists. Solar requires the virtual inverter/battery system. No installed-hardware prediction is warranted.
+## Measured baseline
 
-Incomplete: credentialed Meta tool-use proof, genuine Meta response to generator failure, completed live A/B and any measured AI gain; local inference; vendored offline Three.js; browser visual verification (browser tool timed out during this session); video recording and public repository publication. No real hardware control adapters exist. The three-minute walkthrough is in `DEMO.md`.
+Results from `python3 benchmark.py` using illustrative inputs:
+
+| Scenario | Critical uptime | Water uptime | Delivered water | Unmet water | Unmet electricity | Fuel used | Executed safety violations |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| sunny | 24/24 h | 24/24 h | 960 L | 0 L | 0.00 kWh | 0.00 L | 0 |
+| downpour | 24/24 h | 24/24 h | 960 L | 0 L | 25.00 kWh | 0.00 L | 0 |
+| storm72 | 63/72 h | 46/72 h | 2700 L | 1780 L | 183.78 kWh | 1.80 L | 0 |
+
+The existing report has **no verified live Meta A/B result or AI gain**. A successful connection check only proves one authenticated response; agent tool use and outcome improvement require a separately recorded run. See [comparison report](reports/COMPARISON.md).
+
+## Status
+
+| State | Work |
+|---|---|
+| Completed | Offline scenarios and fixed-rule baseline; safety gate; simulated outcome metrics and decision trace; 24 passing automated tests; v1 PRD imported to `docs/PRD.md`; bounded Responses API adapter and mock contract test. |
+| In Progress | Public GitHub synchronization; demo and submission preparation. |
+| Blocked | Live Meta verification returned HTTP 401 on the single bounded attempt. Full tool-loop evidence and A/B claims require a valid local key and successful recorded run; final submission needs video and platform confirmation. |
+| Not Started | Local open-weight inference and real-hardware adapters; both remain outside this MVP. |
+
+## Limits
+
+The electrical and water models are planning approximations. Pump surge is a capacity check, not transient electrical simulation. No measured pump rating, weather series, load survey, fuel curve, or water pressure model has been verified for the property. Water stored in the cistern can remain unavailable when the pump lacks compatible power. No hardware control API exists. See the PRD for acceptance criteria and future work.

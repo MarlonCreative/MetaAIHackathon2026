@@ -1,5 +1,5 @@
 """Actual Meta function-call loop. No generated plan is executed as prose."""
-import json, os, urllib.request, time
+import json, urllib.request, time
 from copy import deepcopy
 from simulation import baseline
 from local_config import meta_key, settings
@@ -21,12 +21,39 @@ class MetaTransport:
         self.key = meta_key()
         if not self.key: raise ValueError('Meta credentials unavailable')
         self.model = settings().get('META_MODEL','muse-spark-1.3')
+        self.requests = 0
+        self.max_requests = 16  # whole run, including every scenario tick
+        self.replay = []
+        self.message_count = 0
+    def start_tick(self):
+        self.replay = []
+        self.message_count = 0
     def __call__(self, messages):
-        req = urllib.request.Request('https://api.meta.ai/v1/chat/completions',
-            data=json.dumps(dict(model=self.model,messages=messages,tools=TOOLS,tool_choice='auto',temperature=0)).encode(),
-            headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'})
-        with urllib.request.urlopen(req,timeout=30,context=tls_context()) as response:
-            return json.load(response)['choices'][0]['message']
+        if self.requests >= self.max_requests: raise RuntimeError('Run request limit reached')
+        for message in messages[self.message_count:]:
+            if message['role'] == 'tool':
+                self.replay.append({'type':'function_call_output','call_id':message['tool_call_id'],'output':message['content']})
+            elif message['role'] == 'assistant':
+                continue  # the Responses output was already added, including reasoning
+            else:
+                self.replay.append({'role':message['role'],'content':[{'type':'input_text','text':message['content']}]})
+        self.message_count = len(messages)
+        payload={'model':self.model,'input':self.replay,'tools':[{'type':'function',**t['function']} for t in TOOLS],
+                 'tool_choice':'auto','store':False,'include':['reasoning.encrypted_content'],
+                 'max_output_tokens':512,'parallel_tool_calls':False}
+        req = urllib.request.Request('https://api.meta.ai/v1/responses',
+            data=json.dumps(payload).encode(),headers={'Authorization':'Bearer '+self.key,'Content-Type':'application/json'},method='POST')
+        self.requests += 1
+        with urllib.request.urlopen(req,timeout=20,context=tls_context()) as response:
+            result=json.load(response)
+        if result.get('status') != 'completed' or not isinstance(result.get('output'),list):
+            raise ValueError('Incomplete Meta response')
+        self.replay.extend(result['output'])  # encrypted reasoning stays in memory, never in audit
+        calls=[{'id':item['call_id'],'type':'function','function':{'name':item['name'],'arguments':item['arguments']}}
+               for item in result['output'] if item.get('type')=='function_call']
+        return {'role':'assistant','content':None,'tool_calls':calls,
+                '_audit':{'response_id':result.get('id'),'usage':result.get('usage'),
+                          'output_types':[item.get('type') for item in result['output']]}}
 
 class MetaAgent:
     def __init__(self, transport=None):
@@ -50,6 +77,7 @@ class MetaAgent:
     def __call__(self, sim):
         if self.failed:
             baseline(sim); self.audit.append(dict(tick=sim.t,mode='rules_fallback')); return
+        if hasattr(self.transport,'start_tick'): self.transport.start_tick()
         self.audit.append(dict(tick=sim.t,mode='observation',observation=deepcopy(sim.observe())))
         messages=[{'role':'system','content':
             'You control ONLY a virtual two-house resilience simulation. Maximize refrigeration, water delivery and connectivity uptime while conserving fuel. '
@@ -63,7 +91,8 @@ class MetaAgent:
                 if time.monotonic() >= deadline: raise TimeoutError('Tick inference budget exceeded')
                 message=self.transport(messages)
                 messages.append(message)
-                self.audit.append(dict(tick=sim.t,mode='model',message=deepcopy(message)))
+                self.audit.append(dict(tick=sim.t,mode='model',metadata=deepcopy(message.get('_audit',{})),
+                                       tool_names=[c['function']['name'] for c in message.get('tool_calls',[])]))
                 tool_calls=message.get('tool_calls',[])
                 if not tool_calls: return
                 for call in tool_calls:

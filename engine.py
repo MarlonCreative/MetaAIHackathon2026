@@ -66,10 +66,10 @@ def evaluate(s):
 
 def muse_analysis(s,decision,key):
  prompt='''You are CasaOS, a safety-conscious rural home resilience assistant for a TWO-house property in coastal El Salvador. Inputs are SIMULATED. NEVER imply you control equipment. The deterministic policy result is authoritative; do not override it. Give a concise response with three sections: Situation, Why, What the homeowner should do. Focus on off-grid resilience, seasonal heat, cistern water, and remote management. Distinguish measured from hypothetical assumptions. Avoid asserting backup runtime as an exact estimate.\n\n'''+json.dumps({'readings':s,'policy':decision},ensure_ascii=False)
- req=urllib.request.Request('https://api.meta.ai/v1/chat/completions',data=json.dumps({'model':'muse-spark-1.3','messages':[{'role':'developer','content':'Be accurate, practical, and clear. Do not propose unsafe automatic actuation.'},{'role':'user','content':prompt}]}).encode(),headers={'Authorization':f'Bearer {key}','Content-Type':'application/json'},method='POST')
- with urllib.request.urlopen(req,timeout=35,context=tls_context()) as resp:
+ req=urllib.request.Request('https://api.meta.ai/v1/responses',data=json.dumps({'model':'muse-spark-1.3','instructions':'Be accurate, practical, and clear. Do not propose unsafe automatic actuation.','input':prompt,'store':False,'max_output_tokens':256}).encode(),headers={'Authorization':f'Bearer {key}','Content-Type':'application/json'},method='POST')
+ with urllib.request.urlopen(req,timeout=20,context=tls_context()) as resp:
   obj=json.load(resp)
- return obj['choices'][0]['message']['content']
+ return '\n'.join(part.get('text','') for item in obj.get('output',[]) if item.get('type')=='message' for part in item.get('content',[]) if part.get('type')=='output_text')
 
 def demo_analysis(s,decision):
  message=('The grid is down. ' if not s['grid'] else 'Grid power is available. ')+f"Stored water is at {s['water']}% and the hypothetical battery at {s['battery']}%. "

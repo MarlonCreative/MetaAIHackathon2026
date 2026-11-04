@@ -18,7 +18,7 @@ function showTick(){
 }
 el('labTime').oninput=showTick;
 el('labRun').onclick=async()=>{
- el('labRun').disabled=true;el('labStatus').textContent='Running; Meta can take several minutes and uses API credits.';
+ el('labRun').disabled=true;el('labStatus').textContent=el('labController').value==='meta'?'Running; at most 16 Meta requests, 512 output tokens each. API credits are used.':'Running offline baseline.';
  try{
  const response=await fetch('/api/lab/run',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({scenario:el('labScenario').value,controller:el('labController').value})});
  const job=await response.json();if(!response.ok)throw Error(job.error);

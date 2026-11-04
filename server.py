@@ -17,7 +17,7 @@ class Handler(BaseHTTPRequestHandler):
   if route=='/lab-bridge.js':
    b=(ROOT/'lab-bridge.js').read_bytes();self.send_response(200);self.send_header('Content-Type','text/javascript');self.send_header('Content-Length',str(len(b)));self.end_headers();return self.wfile.write(b)
   if route=='/api/home-stack': return self.reply(200,{'stack':DEFAULT_STACK,'assumptions':DEFAULT_ASSUMPTIONS})
-  if route=='/api/scenarios': return self.reply(200,{'scenarios':SCENARIOS,'live_available':bool(os.getenv('MODEL_API_KEY'))})
+  if route=='/api/scenarios': return self.reply(200,{'scenarios':SCENARIOS,'live_available':bool(meta_key())})
   if route=='/digital-twin.html':
    b=(ROOT/'digital-twin.html').read_bytes();self.send_response(200);self.send_header('Content-Type','text/html; charset=utf-8');self.send_header('Content-Length',str(len(b)));self.end_headers();return self.wfile.write(b)
   if route in ['/','/index.html']:
@@ -36,11 +36,11 @@ class Handler(BaseHTTPRequestHandler):
    s=validate(data.get('readings'));decision=evaluate(s)
    mode=data.get('mode','demo')
    if mode=='live':
-    if not os.getenv('MODEL_API_KEY'):return self.reply(400,{'error':'Set MODEL_API_KEY in the terminal before launching.'})
-    analysis=muse_analysis(s,decision,os.environ['MODEL_API_KEY'])
+    if not meta_key():return self.reply(400,{'error':'Set MODEL_API_KEY in the ignored local .env file.'})
+    analysis=muse_analysis(s,decision,meta_key())
    else:analysis=demo_analysis(s,decision)
    return self.reply(200,{'decision':decision,'analysis':analysis,'readings':s,'mode':mode})
   except ValueError as e:return self.reply(400,{'error':str(e)})
-  except Exception as e:return self.reply(502,{'error':f'{type(e).__name__}: {str(e)[:220]}'})
+  except Exception:return self.reply(502,{'error':'Provider or simulation request failed'})
 if __name__=='__main__':
- port=int(os.getenv('PORT','8766'));print(f'CasaOS on http://127.0.0.1:{port} | live Meta: {bool(os.getenv("MODEL_API_KEY"))}');ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever()
+ port=int(os.getenv('PORT','8766'));print(f'CasaOS on http://127.0.0.1:{port} | live Meta configured: {bool(meta_key())}');ThreadingHTTPServer(('127.0.0.1',port),Handler).serve_forever()
