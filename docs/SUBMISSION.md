@@ -10,7 +10,7 @@ The [official Meta event page](https://dev.meta.ai/events/global-hackathon) conf
 |---|---|---|
 | Completed | Offline simulator, baseline, safety gate, reproducible scenarios | `python3 -m unittest discover -v`: 31 passed; `python3 benchmark.py` writes the baseline reports. |
 | Completed | Product requirements imported | `docs/PRD.md` is an unchanged copy of the v1 PRD found at repository root. |
-| In Progress | Public source repository | Homeowner UI, Meta run evidence, tests, and documentation are prepared locally; verify the public commit and file URLs before submission. |
+| Completed | Public source repository | Homeowner UI, Meta run evidence, tests, and documentation are on public `main`; compare the repository with the local checkout before submission. |
 | Completed | Bounded Meta Responses integration | A credentialed storm run completed with 43 model requests, 31 model-selected tool calls, five accepted state changes, and no fallback. |
 | Completed | Equal-input A/B report | `reports/storm72-meta.json` records the full audit; service uptime and fuel match the fixed-rule baseline. No meaningful AI gain claimed. |
 | Not Started | Three-minute demo video | Record after selecting truthful live or baseline-only evidence. Retain video URL and playback check. |
