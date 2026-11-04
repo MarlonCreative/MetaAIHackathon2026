@@ -1,0 +1,20 @@
+# Local secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+secrets.json
+
+# Python caches and environments
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+
+# Local artifacts
+node_modules/
+.DS_Store
+*.log
+*.db
+*.sqlite3
