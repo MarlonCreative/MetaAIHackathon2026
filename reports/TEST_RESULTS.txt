@@ -1,0 +1,36 @@
+test_all_scenarios (test_engine.EngineTests.test_all_scenarios) ... ok
+test_critical (test_engine.EngineTests.test_critical) ... ok
+test_no_real_control (test_engine.EngineTests.test_no_real_control) ... ok
+test_outage_sheds_ac (test_engine.EngineTests.test_outage_sheds_ac) ... ok
+test_decision_limit_does_not_prevent_later_event (test_simulation.AgentTests.test_decision_limit_does_not_prevent_later_event) ... ok
+test_event_triggered_agent_reaches_late_disturbances (test_simulation.AgentTests.test_event_triggered_agent_reaches_late_disturbances) ... ok
+test_failure_falls_back_explicitly (test_simulation.AgentTests.test_failure_falls_back_explicitly) ... ok
+test_incomplete_provider_response_is_classified (test_simulation.AgentTests.test_incomplete_provider_response_is_classified) ... ok
+test_resource_alert_triggers_without_new_event (test_simulation.AgentTests.test_resource_alert_triggers_without_new_event) ... ok
+test_responses_contract_and_bounded_replay (test_simulation.AgentTests.test_responses_contract_and_bounded_replay) ... ok
+test_tools_feedback_and_unexpected_failure (test_simulation.AgentTests.test_tools_feedback_and_unexpected_failure) ... ok
+test_unknown_tool (test_simulation.AgentTests.test_unknown_tool) ... ok
+test_full_cistern_without_power_has_no_delivery (test_simulation.SimulationTests.test_full_cistern_without_power_has_no_delivery) ... ok
+test_home_stack_configuration_changes_measured_run (test_simulation.SimulationTests.test_home_stack_configuration_changes_measured_run) ... ok
+test_home_stack_configuration_rejects_impossible_inputs (test_simulation.SimulationTests.test_home_stack_configuration_rejects_impossible_inputs) ... ok
+test_inverter_and_surge_limit (test_simulation.SimulationTests.test_inverter_and_surge_limit) ... ok
+test_missing_agent_is_not_an_ai_score (test_simulation.SimulationTests.test_missing_agent_is_not_an_ai_score) ... ok
+test_night_and_clouds (test_simulation.SimulationTests.test_night_and_clouds) ... ok
+test_preview_compares_services_and_fuel (test_simulation.SimulationTests.test_preview_compares_services_and_fuel) ... ok
+test_preview_does_not_mutate_or_leak_events (test_simulation.SimulationTests.test_preview_does_not_mutate_or_leak_events) ... ok
+test_reject_controls (test_simulation.SimulationTests.test_reject_controls) ... ok
+test_resource_conservation (test_simulation.SimulationTests.test_resource_conservation) ... ok
+test_scenarios_reproducible_and_safe (test_simulation.SimulationTests.test_scenarios_reproducible_and_safe) ... ok
+test_baseline_no_backup (test_stack.HomeStackTests.test_baseline_no_backup) ... ok
+test_generator_improves_baseline (test_stack.HomeStackTests.test_generator_improves_baseline) ... ok
+test_generator_without_fuel (test_stack.HomeStackTests.test_generator_without_fuel) ... ok
+test_invalid_range (test_stack.HomeStackTests.test_invalid_range) ... ok
+test_solar_improves_coverage (test_stack.HomeStackTests.test_solar_improves_coverage) ... ok
+test_stored_water_not_deliverable_without_pump_power (test_stack.HomeStackTests.test_stored_water_not_deliverable_without_pump_power) ... ok
+test_well_counts_with_confirmation (test_stack.HomeStackTests.test_well_counts_with_confirmation) ... ok
+test_well_not_counted_without_quality_confirmation (test_stack.HomeStackTests.test_well_not_counted_without_quality_confirmation) ... ok
+
+----------------------------------------------------------------------
+Ran 31 tests in 0.136s
+
+OK

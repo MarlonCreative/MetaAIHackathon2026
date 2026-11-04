@@ -3569,9 +3569,25 @@
         }
       }
     ],
-    "input_sha256": "d3ecf43856ebc97580c72629b059a6e3e2f94ec1cd1e9afadb14711be97c6077"
+    "input_sha256": "685eaa0026cb59e867340fb81b1f976e808c2ca2464178387bf188902dde3aa9"
   },
   "agent": null,
   "delta": null,
-  "status": "NOT RUN: Meta credentials/inference required; no AI improvement claimed"
+  "configuration": {
+    "equipment": {
+      "battery_kwh": 10,
+      "battery_kw": 3,
+      "inverter_kw": 4,
+      "surge_kw": 5,
+      "solar_kwp": 3.8,
+      "generator_kw": 3,
+      "cistern_l": 3000,
+      "pump_kw": 0.65,
+      "pump_surge_kw": 2,
+      "pump_lph": 600,
+      "efficiency": 0.92
+    },
+    "initial": {}
+  },
+  "status": "baseline_only"
 }

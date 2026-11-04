@@ -1,0 +1,21 @@
+{
+  "checked_at_utc": "2026-11-04T04:35:10.819654+00:00",
+  "endpoint": "https://api.meta.ai/v1/responses",
+  "model": "muse-spark-1.3",
+  "request_limit": 1,
+  "max_output_tokens": 128,
+  "timeout_seconds": 20,
+  "provider_storage_requested": false,
+  "http_status": 200,
+  "response_status": "incomplete",
+  "response_id": "resp_6aeab601ac1f748fbcf540e8",
+  "usage": {
+    "input_tokens": 16,
+    "output_tokens": 128,
+    "total_tokens": 144
+  },
+  "output_types": [
+    "reasoning"
+  ],
+  "expected_reply_observed": false
+}
