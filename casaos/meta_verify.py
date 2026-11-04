@@ -42,6 +42,15 @@ def verify():
     except urllib.error.HTTPError as exc:
         audit['http_status'] = exc.code
         audit['response_status'] = 'http_error'
+        try:
+            error = json.load(exc).get('error', {})
+            if isinstance(error, dict):
+                for field in ('type', 'code'):
+                    value = error.get(field)
+                    if isinstance(value, str) and len(value) <= 80:
+                        audit['provider_error_' + field] = value
+        except (ValueError, OSError):
+            pass
     except Exception as exc:
         audit['response_status'] = 'request_error'
         audit['error_type'] = type(exc).__name__
