@@ -1,0 +1,35 @@
+{
+  "name": "storm72",
+  "seed": 42,
+  "hours": 72,
+  "start_hour": 8,
+  "initial": {
+    "battery_kwh": 4.0,
+    "grid": false,
+    "weather_factor": 0.04,
+    "water_inflow_lph": 0
+  },
+  "events": [
+    {
+      "tick": 24,
+      "label": "Unexpected generator failure",
+      "set": {
+        "generator_fault": true
+      }
+    },
+    {
+      "tick": 32,
+      "label": "Unexpected household water demand",
+      "set": {
+        "water_demand_lph": 80
+      }
+    },
+    {
+      "tick": 48,
+      "label": "Rain easing",
+      "set": {
+        "weather_factor": 0.4
+      }
+    }
+  ]
+}
