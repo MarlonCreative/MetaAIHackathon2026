@@ -1,0 +1,8 @@
+{
+  "name": "sunny",
+  "seed": 42,
+  "hours": 24,
+  "start_hour": 8,
+  "initial": {},
+  "events": []
+}
