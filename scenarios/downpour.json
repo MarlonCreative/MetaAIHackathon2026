@@ -1,0 +1,30 @@
+{
+  "name": "downpour",
+  "seed": 42,
+  "hours": 24,
+  "start_hour": 8,
+  "initial": {},
+  "events": [
+    {
+      "tick": 4,
+      "label": "Tropical downpour",
+      "set": {
+        "weather_factor": 0.12
+      }
+    },
+    {
+      "tick": 6,
+      "label": "DELSUR interruption",
+      "set": {
+        "grid": false
+      }
+    },
+    {
+      "tick": 16,
+      "label": "Grid restored",
+      "set": {
+        "grid": true
+      }
+    }
+  ]
+}
